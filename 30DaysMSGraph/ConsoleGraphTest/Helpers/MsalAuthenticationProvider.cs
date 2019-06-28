@@ -10,37 +10,38 @@ using System.Linq;
 
 namespace ConsoleGraphTest
 {
-// This class encapsulates the details of getting a token from MSAL and exposes it via the
-// IAuthenticationProvider interface so that GraphServiceClient or AuthHandler can use it.
-// A significantly enhanced version of this class will in the future be available from
-// the GraphSDK team.  It will supports all the types of Client Application as defined by MSAL.
-public class MsalAuthenticationProvider : IAuthenticationProvider
-{
-private ConfidentialClientApplication _clientApplication;
-private string[] _scopes;
+    // This class encapsulates the details of getting a token from MSAL and exposes it via the
+    // IAuthenticationProvider interface so that GraphServiceClient or AuthHandler can use it.
+    // A significantly enhanced version of this class will in the future be available from
+    // the GraphSDK team.  It will supports all the types of Client Application as defined by MSAL.
+    public class MsalAuthenticationProvider : IAuthenticationProvider
+    {
+        private IConfidentialClientApplication _clientApplication;
+        private string[] _scopes;
 
-public MsalAuthenticationProvider(ConfidentialClientApplication clientApplication, string[] scopes) {
-_clientApplication = clientApplication;
-_scopes = scopes;
-}
+        public MsalAuthenticationProvider(IConfidentialClientApplication clientApplication, string[] scopes) {
+            _clientApplication = clientApplication;
+            _scopes = scopes;
+        }
 
-/// &lt;summary&gt;
-/// Update HttpRequestMessage with credentials
-/// &lt;/summary&gt;
-public async Task AuthenticateRequestAsync(HttpRequestMessage request)
-{
-var token = await GetTokenAsync();
-request.Headers.Authorization = new AuthenticationHeaderValue("bearer", token);
-}
+        /// <summary>
+        /// Update HttpRequestMessage with credentials
+        /// </summary>
+        public async Task AuthenticateRequestAsync(HttpRequestMessage request)
+        {
+            var token = await GetTokenAsync();
+            request.Headers.Authorization = new AuthenticationHeaderValue("bearer", token);
+        }
 
-/// &lt;summary&gt;
-/// Acquire Token
-/// &lt;/summary&gt;
-public async Task&lt;string&gt; GetTokenAsync()
-{
-AuthenticationResult authResult = null;
-authResult = await _clientApplication.AcquireTokenForClientAsync(_scopes);
-return authResult.AccessToken;
-}
-}
+        /// <summary>
+        /// Acquire Token
+        /// </summary>
+        public async Task<string> GetTokenAsync()
+        {
+            AuthenticationResult authResult = null;
+            authResult = await _clientApplication.AcquireTokenForClient(_scopes)
+                                .ExecuteAsync();
+            return authResult.AccessToken;
+        }
+    }
 }
