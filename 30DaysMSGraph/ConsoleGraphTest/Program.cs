@@ -44,5 +44,36 @@ namespace ConsoleGraphTest
                 return null;
             }
         }
+
+        private static IAuthenticationProvider CreateAuthorizationProvider(IConfigurationRoot config)
+        {
+            var clientId = config["applicationId"];
+            var clientSecret = config["applicationSecret"];
+            var redirectUri = config["redirectUri"];
+            var authority = $"https://login.microsoftonline.com/{config["tenantId"]}/v2.0";
+
+            List<string> scopes = new List<string>();
+            scopes.Add("https://graph.microsoft.com/.default");
+
+            var cca = ConfidentialClientApplicationBuilder.Create(clientId)
+                                                    .WithAuthority(authority)
+                                                    .WithRedirectUri(redirectUri)
+                                                    .WithClientSecret(clientSecret)
+                                                    .Build();
+            return new MsalAuthenticationProvider(cca, scopes.ToArray());
+        }
+        private static GraphServiceClient GetAuthenticatedGraphClient(IConfigurationRoot config)
+        {
+            var authenticationProvider = CreateAuthorizationProvider(config);
+            _graphServiceClient = new GraphServiceClient(authenticationProvider);
+            return _graphServiceClient;
+        }
+
+        private static HttpClient GetAuthenticatedHTTPClient(IConfigurationRoot config)
+        {
+            var authenticationProvider = CreateAuthorizationProvider(config);
+            _httpClient = new HttpClient(new AuthHandler(authenticationProvider, new HttpClientHandler()));
+            return _httpClient;
+        }
     }
 }
